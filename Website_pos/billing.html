@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Billing Page</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Section 1: Categories -->
+        <div class="section categories">
+            <h3>Categories</h3>
+            <div id="categoryList"></div>
+        </div>
+
+        <!-- Section 2: Items -->
+        <div class="section items">
+            <h3>Items</h3>
+            <div id="itemList"></div>
+        </div>
+
+        <!-- Section 3: Bill -->
+        <div class="section bill">
+            <h3>Bill</h3>
+            <table class="bill-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody id="billItems"></tbody>
+            </table>
+            <div class="total">Total: $<span id="totalPrice">0.00</span></div>
+
+            <button id="checkoutBtn" style="margin-top:10px;padding:10px;background-color:#28a745;color:white;border:none;cursor:pointer;">
+            Print Receipt
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let bill = {};
+
+            function loadCategories() {
+                $.get('fetch_categories.php', function(data) {
+                    const categories = JSON.parse(data);
+                    $('#categoryList').html('<button class="category-btn" data-cat="">All</button>');
+                    categories.forEach(cat => {
+                        $('#categoryList').append(`<button class="category-btn" data-cat="${cat}">${cat}</button>`);
+                    });
+                });
+            }
+
+            function loadItems(category = '') {
+                $.get('fetch_items.php', {
+                    category
+                }, function(data) {
+                    const items = JSON.parse(data);
+                    $('#itemList').empty();
+                    items.forEach(item => {
+                        $('#itemList').append(`
+          <div class="item-card" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
+            <img src="${item.image_path}" alt="${item.name}">
+            <div>${item.name}</div>
+            <div>$${item.price}</div>
+          </div>
+        `);
+                    });
+                });
+            }
+
+            function updateBill(name, price) {
+                if (bill[name]) {
+                    bill[name].qty += 1;
+                } else {
+                    bill[name] = {
+                        qty: 1,
+                        price: parseFloat(price)
+                    };
+                }
+
+                let total = 0;
+                $('#billItems').empty();
+                Object.entries(bill).forEach(([name, item]) => {
+                    const subtotal = item.qty * item.price;
+                    total += subtotal;
+                    $('#billItems').append(`
+        <tr>
+          <td>${name}</td>
+          <td>${item.qty}</td>
+          <td>$${subtotal.toFixed(2)}</td>
+        </tr>
+      `);
+                });
+
+                $('#totalPrice').text(total.toFixed(2));
+            }
+
+            // Load everything on startup
+            loadCategories();
+            loadItems();
+
+            // Filter by category
+            $(document).on('click', '.category-btn', function() {
+                const category = $(this).data('cat');
+                loadItems(category);
+            });
+
+            // Add item to bill
+            $(document).on('click', '.item-card', function() {
+                const name = $(this).data('name');
+                const price = $(this).data('price');
+                updateBill(name, price);
+            });
+        });
+        $('#checkoutBtn').on('click', function() {
+            if (Object.keys(bill).length === 0) {
+                alert("No items in the bill.");
+                return;
+            }
+
+            let receipt = '*** Receipt ***\n\n';
+            let total = 0;
+
+            Object.entries(bill).forEach(([name, item]) => {
+                const subtotal = item.qty * item.price;
+                total += subtotal;
+                receipt += `${name} x${item.qty} = $${subtotal.toFixed(2)}\n`;
+            });
+
+            receipt += `\nTotal: $${total.toFixed(2)}\n\nThank you!`;
+
+            const newWindow = window.open('', '', 'width=400,height=600');
+            newWindow.document.write(`<pre>${receipt}</pre>`);
+            newWindow.document.close();
+            newWindow.focus();
+            newWindow.print();
+            newWindow.close();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Stock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+        
+        form {
+            width: 300px;
+            margin: 0 auto;
+        }
+        
+        input,
+        select {
+            display: block;
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 10px;
+        }
+        
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Add New Stock</h2>
+
+    <form id="stockForm" enctype="multipart/form-data">
+        <input type="text" name="category" placeholder="Category" required>
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="number" name="price" placeholder="Price" step="0.01" required>
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Add Stock</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#stockForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: 'insert_stock.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    alert(response);
+                    $('#stockForm')[0].reset();
+                },
+                error: function() {
+                    alert("Error inserting data.");
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
