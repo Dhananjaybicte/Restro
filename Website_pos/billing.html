@@ -6,7 +6,6 @@
     <title>Billing Page</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -40,11 +39,9 @@
             <div class="total">Total: $<span id="totalPrice">0.00</span></div>
 
             <button id="checkoutBtn" style="margin-top:10px;padding:10px;background-color:#28a745;color:white;border:none;cursor:pointer;">
-            Print Receipt
+                Print Receipt
             </button>
-
         </div>
-
     </div>
 
     <script>
@@ -69,11 +66,11 @@
                     $('#itemList').empty();
                     items.forEach(item => {
                         $('#itemList').append(`
-          <div class="item-card" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
-            <img src="${item.image_path}" alt="${item.name}">
-            <div>${item.name}</div>
-            <div>$${item.price}</div>
-          </div>
+                    <div class="item-card" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
+                        <img src="${item.image_path}" alt="${item.name}">
+                        <div>${item.name}</div>
+                        <div>$${item.price}</div>
+                    </div>
         `);
                     });
                 });
@@ -95,18 +92,18 @@
                     const subtotal = item.qty * item.price;
                     total += subtotal;
                     $('#billItems').append(`
-        <tr>
-          <td>${name}</td>
-          <td>${item.qty}</td>
-          <td>$${subtotal.toFixed(2)}</td>
-        </tr>
-      `);
+                        <tr>
+                            <td>${name}</td>
+                            <td>${item.qty}</td>
+                            <td>$${subtotal.toFixed(2)}</td>
+                        </tr>
+                    `);
                 });
 
                 $('#totalPrice').text(total.toFixed(2));
             }
 
-            // Load everything on startup
+            // Load initial data
             loadCategories();
             loadItems();
 
@@ -122,33 +119,36 @@
                 const price = $(this).data('price');
                 updateBill(name, price);
             });
-        });
-        $('#checkoutBtn').on('click', function() {
-            if (Object.keys(bill).length === 0) {
-                alert("No items in the bill.");
-                return;
-            }
 
-            let receipt = '*** Receipt ***\n\n';
-            let total = 0;
+            // Checkout button handler - now inside ready()
+            $('#checkoutBtn').on('click', function() {
+                if (Object.keys(bill).length === 0) {
+                    alert("No items in the bill.");
+                    return;
+                }
 
-            Object.entries(bill).forEach(([name, item]) => {
-                const subtotal = item.qty * item.price;
-                total += subtotal;
-                receipt += `${name} x${item.qty} = $${subtotal.toFixed(2)}\n`;
+                let receipt = '* Receipt *\n\n';
+                let total = 0;
+
+                Object.entries(bill).forEach(([name, item]) => {
+                    const subtotal = item.qty * item.price;
+                    total += subtotal;
+                    receipt += ` ${name} x${item.qty} = $${subtotal.toFixed(2)}\n`;
+                });
+
+                receipt += `\nTotal: $${total.toFixed(2)}\n\nThank you!`;
+
+                const newWindow = window.open('', '', 'width=400,height=600');
+                newWindow.document.write(`< pre > $ {
+                                        receipt
+                                    } < /pre>`);
+                newWindow.document.close();
+                newWindow.focus();
+                newWindow.print();
+                newWindow.close();
             });
-
-            receipt += `\nTotal: $${total.toFixed(2)}\n\nThank you!`;
-
-            const newWindow = window.open('', '', 'width=400,height=600');
-            newWindow.document.write(`<pre>${receipt}</pre>`);
-            newWindow.document.close();
-            newWindow.focus();
-            newWindow.print();
-            newWindow.close();
         });
     </script>
 </body>
-
 
 </html>
